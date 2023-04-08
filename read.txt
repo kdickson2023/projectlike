@@ -1,0 +1,187 @@
+value="<?php echo $number ?>"
+..................................
+
+CREATE TABLE invoice(
+	invoice_no INT(11) PRIMARY KEY AUTO_INCREMENT,
+	customer_name VARCHAR(100) NOT NULL,
+	contact VARCHAR(100) NOT NULL,
+	location VARCHAR(100) NOT NULL,
+	order_date DATE NOT NULL,
+	sub_total DOUBLE NOT NULL,
+	discount DOUBLE NOT NULL,
+	net_total DOUBLE NOT NULL
+);
+
+.............................................................................................
+CREATE TABLE invoice(
+	invoice_no INT(11) PRIMARY KEY AUTO_INCREMENT,
+	customer_name INT(11) NOT NULL,
+	contact VARCHAR(100) NOT NULL,
+	location VARCHAR(100) NOT NULL,
+	order_date DATE NOT NULL,
+	sub_total DOUBLE NOT NULL,
+	discount DOUBLE NOT NULL,
+	net_total DOUBLE NOT NULL,
+	FOREIGN KEY(customer_name) REFERENCES customers(cust_id)
+
+);
+
+..............................................................................................
+
+CREATE TABLE invoice_details(
+	id INT(11) PRIMARY KEY AUTO_INCREMENT,
+	invoice_no INT(11) NOT NULL,
+	product_name VARCHAR(100) NOT NULL,
+	price DOUBLE NOT NULL,
+	qty INT(11) NOT NULL,
+	FOREIGN KEY(invoice_no) REFERENCES invoice (invoice_no)
+
+
+
+);
+
+..................................................................................................
+// create product table
+
+CREATE TABLE products(
+pid INT(11) NOT NULL AUTO_INCREMENT,
+cid INT(11) NOT NULL,
+product_name VARCHAR(100) NOT NULL,
+product_stock DOUBLE NOT NULL,
+product_price DOUBLE NOT NULL,
+product_cost DOUBLE NOT NULL,
+expire_date DATE NOT NULL,
+pro_date DATE NOT NULL,
+added_date DATE NOT NULL,
+p_status ENUM('1','0') NOT NULL,
+PRIMARY KEY(pid),
+UNIQUE KEY(product_name),
+FOREIGN KEY(cid) REFERENCES categories(cid)
+);
+
+..................................................................................................
+
+HOW TO WRITE SELECT PRODUCT QUERY
+
+SELECT 
+p.product_name,c.category_name,b.brand_name,p.product_price,p.product_stock,p.added_date,p.p_status FROM products p,brands b,categories c WHERE  p.bid = b.bid AND p.cid = c.cid
+
+..................................................................................................
+
+SELECT
+p.product_name,p.product_stock,p.product_price,p.product_cost,c.category_name,p.expire_date,p.pro_date FROM products p,categories c WHERE p.cid = c.cid
+
+SELECT p.pid,p.product_name,p.product_stock,p.product_price,p.product_cost,c.category_name,p.expire_date,p.pro_date FROM products p,categories c WHERE p.cid = c.cid
+..................................................................................................
+/// this how to create seperate table by joining two tables
+
+
+CREATE TABLE product_c as
+SELECT p.pid,p.product_name,p.product_stock,p.product_price,p.product_cost,c.category_name,p.expire_date,p.pro_date FROM products p,categories c WHERE p.cid = c.cid
+......................................................................................................
+CREATE TABLE invoice_f as
+SELECT d.id,i.order_date,c.cust_name,d.product_name,d.qty FROM invoice i,customer c,invoice_details d WHERE i.customer_name = c.cust_id 
+.....................................................................................................
+SELECT d.id,i.order_date,c.cust_name,d.product_name,d.qty FROM invoice i,customer c,invoice_details d WHERE i.customer_name = c.cust_id
+......................................
+
+
+
+SELECT i.invoice_no,i.order_date,c.cust_name,i.sub_total,i.discount,i.net_total,i.paid,i.payment_type,c.cust_status FROM invoice i, customer c WHERE i.customer_name=c.cust_id
+
+
+
+
+
+
+inner join expression
+SELECT p.pid, p.product_name, p.product_stock, p.product_price, p.product_cost, c.category_name, p.expire_date, p.pro_date FROM products p INNER JOIN categories c ON p.cid = c.cid
+
+
+if (c_contact.val()=="" || c_contact.val().length<10) {
+				c_contact.addClass("border-danger");
+				$("#contact_error").html("<span class= 'text-danger' >Enter Customer Contact</span>");
+				status=false;
+
+			}else{
+				c_contact.removeClass("border-danger");
+				$("#contact_error").html("");
+				status=true;
+			}
+
+
+
+
+
+..........................................................
+status = false;
+				}else{
+
+				$.ajax({
+					url: DOMAIN+"./includes/process.php",
+					method: "POST",
+					data: $("#customer_form").serialize(),
+					success: function(data){
+						if (data == "NAME_ALREADY_EXIST") {
+
+					cust_name.addClass("border-danger");
+					$("#cust_error").html("<span class='text-danger'>Customer Name Exist...!!</span>");
+		
+						}
+						else{
+
+					cust_name.removeClass("border-danger");
+					$("#cust_error").html("<span class='text-success'>Customer Name Successfully Aded..!!</span>");
+					$("#c_contact").val("");
+					$("#c_location").val("");
+					$("#cust_name").val("");
+
+					}
+
+					}
+				})
+
+
+............................................................................
+
+$orderdate = $_POST["order_date"];
+	$select_cat = $_POST["select_cat"];
+	$order_contact = $_POST["order_contact"];
+	$order_location = $_POST["order_location"];
+	$invoice_no = $_POST["invoice_no"];
+
+
+	//Now getting array from order_form
+	$ar_tqty = $_POST["tqty"];
+	$ar_qty = $_POST["qty"];
+	$ar_price = $_POST["price"];
+	$ar_pro_name = $_POST["pro_name"];
+
+
+	$sub_total = $_POST["sub_total"];
+	$discount = $_POST["discount"];
+	$net_total = $_POST["net_total"];
+	.........................................................................
+
+	public function storeCustomerOrderInvoice($orderdate,$select_cat,$order_contact,$order_location,$invoice_no,$ar_tqty,$ar_qty,$ar_price,$ar_pro_name,$sub_total,$discount,$net_total){
+				$pre_stmt = $this->con->prepare("INSERT INTO `invoice`(`customer_name`, `contact`, `location`, `order_date`, `sub_total`, `discount`, `net_total`) VALUES (?,?,?,?,?,?,?)");
+				$pre_stmt->bind_param("ssssssddd",$orderdate,$select_cat,$order_contact,$order_location,$order_location,$invoice_no,$sub_total,$discount,$net_total);
+				$result=$pre_stmt->execute() or die($this->con->error);
+
+				if ($result) {
+					
+				$insert_product = $this->con->prepare("INSERT INTO `invoice_details`(`invoice_no`, `product_name`, `price`, `qty`) VALUES (?,?,?,?)");
+				$insert_product->bind_param("ssdd",$invoice_no,$ar_pro_name,$ar_price,$ar_qty);
+				$insert_product->execute() or die($this->con->error);
+				if ($insert_product) {
+					
+					return "ORDER_SUCCESSFULLY_SUBMITTED";
+				}
+				  else{
+
+				  	  return 0;
+				  }
+				}
+
+
+		    }
